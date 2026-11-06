@@ -4,3 +4,6 @@ apps/server/data/
 recordings/
 *.log
 .env
+*.db
+*.db-*
+*.key

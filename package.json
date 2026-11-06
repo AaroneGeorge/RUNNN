@@ -1,13 +1,18 @@
 {
   "name": "runnn",
   "private": true,
-  "packageManager": "pnpm@10",
-  "engines": { "node": ">=22.13" },
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
   "scripts": {
     "dev": "pnpm --parallel --filter @runnn/server --filter @runnn/web dev",
+    "dev:server": "pnpm --filter @runnn/server dev",
+    "dev:web": "pnpm --filter @runnn/web dev",
     "build": "pnpm --filter @runnn/web build",
     "start": "pnpm --filter @runnn/server start",
-    "test": "pnpm --filter @runnn/server test",
-    "typecheck": "pnpm -r typecheck"
-  }
+    "test": "pnpm --filter @runnn/server test && pnpm --filter @runnn/shared test",
+    "typecheck": "pnpm -r typecheck",
+    "e2e": "pnpm build && node e2e/scan.e2e.mjs"
+  },
+  "engines": { "node": ">=22.13" },
+  "devDependencies": { "playwright-core": "^1.56.0" }
 }
