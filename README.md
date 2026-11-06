@@ -53,8 +53,28 @@ Sign in as an organiser from the intro screen (**I'm an organiser**) to host gam
 | `ORGANISER_USERNAME` / `ORGANISER_PASSWORD` | | Seeds an organiser account on boot |
 | `RESEND_API_KEY` / `MAIL_FROM` | | Email sign-in codes. Without them, codes are printed to the server log |
 | `TRUST_PROXY` | | Set when behind a proxy so rate limits use `X-Forwarded-For` |
+| `WORLD_APP_ID` / `WORLD_RP_ID` / `WORLD_RP_SIGNING_KEY` | | Turns on World ID Selfie Check sign-in (see below) |
+| `WORLD_ENV` | `production` | `staging` for the World ID simulator |
+| `WORLD_ACTION` | `runnn-login` | Action name the proofs are bound to |
 
 **Back up `data/bib.key`.** Losing it invalidates every bib already printed.
+
+## Sign in with World ID (Selfie Check)
+
+Players can sign in, or verify an existing profile, with a [World ID](https://docs.world.org/world-id/idkit/integrate) Selfie Check. This proves they're a unique human without telling the game who they are. One World ID maps to exactly one profile.
+
+1. Create an app in the [World Developer Portal](https://developer.world.org) with World ID 4.0 enabled. Note the `app_…` ID, the `rp_…` ID and the RP signing key.
+2. Set `WORLD_APP_ID`, `WORLD_RP_ID` and `WORLD_RP_SIGNING_KEY` on the server. Keep the signing key server-side only.
+3. The **Sign in with World ID** button appears on the profile screen once the server has credentials.
+
+How it works:
+
+- The server signs each request (`POST /api/auth/world/context`), so the signing key never reaches the browser.
+- The browser opens an IDKit `selfieCheck()` request and shows a World App QR code, or a deep link on phones.
+- The finished proof goes back to the server (`POST /api/auth/world/verify`). The server checks the nonce it issued, the action and the environment, then forwards the proof to `developer.world.org/api/v4/verify/{rp_id}`.
+- The returned nullifier is stored with a unique index. Signing in again with the same World ID returns the same profile. A signed-in guest who verifies keeps their XP.
+
+To test without a phone, set `WORLD_ENV=staging` and use the [World ID simulator](https://simulator.worldcoin.org/).
 
 ## Bibs
 

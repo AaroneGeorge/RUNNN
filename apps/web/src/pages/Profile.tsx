@@ -1,8 +1,9 @@
-import { Award, LogOut, Mail, Pencil, Settings as SettingsIcon } from 'lucide-react';
+import { Award, BadgeCheck, LogOut, Mail, Pencil, Settings as SettingsIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { cleanName, levelProgress, type HistoryItem, type MeResponse, type Profile } from '@runnn/shared';
 import { Mascot } from '../components/Mascot.tsx';
+import { WorldLogin } from '../components/WorldLogin.tsx';
 import { Avatar, Button, Card, ErrorBox, Field, IconButton, Input, ListRow, Loading, Page, Pill, Section, Sheet, Stat } from '../components/ui.tsx';
 import { Points } from '../game/bits.tsx';
 import { api, useApi } from '../lib/api.ts';
@@ -36,7 +37,10 @@ function ProfileHead({ p }: { p: Profile }) {
       <div className="flex items-center gap-4">
         <Avatar name={p.name} size={64} />
         <div className="min-w-0">
-          <h2 className="truncate text-2xl font-black">{p.name}</h2>
+          <h2 className="flex items-center gap-1.5 truncate text-2xl font-black">
+            {p.name}
+            {p.humanVerified && <BadgeCheck className="size-6 shrink-0 text-good" aria-label="Verified human" />}
+          </h2>
           <div className="text-sm text-dim">Playing since {new Date(p.createdAt).toLocaleDateString([], { month: 'short', year: 'numeric' })}</div>
         </div>
       </div>
@@ -196,7 +200,10 @@ export function Me() {
             Make my profile
           </Button>
         </Card>
-        <Button variant="ghost" block className="mt-3" icon={<Mail className="size-5" />} onClick={() => setEmailOpen(true)}>
+        <div className="mt-3">
+          <WorldLogin name={cleanName(name) || undefined} />
+        </div>
+        <Button variant="ghost" block className="mt-2" icon={<Mail className="size-5" />} onClick={() => setEmailOpen(true)}>
           I have one: sign in with email
         </Button>
         <Sheet open={emailOpen} onClose={() => setEmailOpen(false)} title="Sign in with email">
@@ -247,6 +254,11 @@ export function Me() {
             <div className="text-dim">Add an email so a lost phone doesn’t mean lost XP.</div>
           </div>
         </Card>
+      )}
+      {!profile.humanVerified && (
+        <div className="mt-3">
+          <WorldLogin mode="verify" onDone={me.reload} />
+        </div>
       )}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Button variant="secondary" icon={<Award className="size-5" />} onClick={() => nav('/achievements')}>
