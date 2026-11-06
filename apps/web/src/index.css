@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/archivo';
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-sans: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-night: #eeebe3; /* page */
+  --color-panel: #ffffff; /* card */
+  --color-sunk: #e4e0d5; /* inset */
+  --color-line: #d9d4c7;
+  --color-ink: #141414;
+  --color-dim: #6b665c;
+  --color-accent: #ffc21a; /* exactly one accent */
+  --color-accent-ink: #141414;
+  --color-alarm: #e8452c; /* alarms only: being scanned, SOS, out of bounds */
+  --color-good: #0f9d58;
+  --color-hunter: #7c3aed;
+  --color-runner: #0f9d58;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root[data-theme='dark'] {
+  --color-night: #0f0f0e;
+  --color-panel: #1b1a18;
+  --color-sunk: #262521;
+  --color-line: #33312c;
+  --color-ink: #f3f0e8;
+  --color-dim: #a39e92;
+  --color-hunter: #a78bfa;
+  --color-runner: #34d399;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100dvh;
+}
+
+body {
+  background: var(--color-night);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topo {
+  background-image: url('/topo.svg');
+  background-size: 800px;
+}
+:root[data-theme='dark'] .topo {
+  background-image: url('/topo.dark.svg');
+}
+
+input,
+select,
+textarea {
+  font-size: 16px; /* smaller zooms the page on iOS */
+}
+
+button,
+[role='button'],
+a {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pulse-edge {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--color-alarm) 90%, transparent);
+  }
+  50% {
+    box-shadow: inset 0 0 0 22px color-mix(in srgb, var(--color-alarm) 55%, transparent);
+  }
+}
+.alarm-edges {
+  animation: pulse-edge 0.7s ease-in-out infinite;
+}
+
+@keyframes blip-in {
+  from {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.radar-sweep {
+  animation: sweep 3s linear infinite;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+}
+.rise {
+  animation: rise 0.35s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .bib-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+}

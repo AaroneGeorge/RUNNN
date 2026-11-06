@@ -1,0 +1,24 @@
+import { cx } from './ui.tsx';
+
+export function LogoMark({ size = 36, className }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 512 512" width={size} height={size} className={className} aria-hidden>
+      <rect width="512" height="512" rx="112" fill="#141414" />
+      <circle cx="318" cy="256" r="104" fill="#ffc21a" />
+      <rect x="84" y="176" width="150" height="36" rx="18" fill="#ffc21a" />
+      <rect x="120" y="238" width="114" height="36" rx="18" fill="#ffc21a" opacity=".7" />
+      <rect x="156" y="300" width="78" height="36" rx="18" fill="#ffc21a" opacity=".45" />
+    </svg>
+  );
+}
+
+export function Wordmark({ className }: { className?: string }) {
+  return (
+    <span className={cx('inline-flex items-center gap-2', className)}>
+      <LogoMark size={30} />
+      <span className="text-xl font-black italic tracking-tight">
+        RUN<span className="text-dim">NN</span>
+      </span>
+    </span>
+  );
+}
