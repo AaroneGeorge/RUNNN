@@ -1,0 +1,36 @@
+{
+  "name": "@runnn/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5",
+    "@number-flow/react": "^0",
+    "@runnn/shared": "workspace:*",
+    "jsqr": "^1",
+    "lucide-react": "^0",
+    "maplibre-gl": "^6",
+    "qrcode": "^1",
+    "react": "^19",
+    "react-dom": "^19",
+    "react-router": "^8",
+    "sonner": "^2",
+    "workbox-window": "^7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4",
+    "@types/qrcode": "^1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5",
+    "tailwindcss": "^4",
+    "typescript": "^5.9",
+    "vite": "^8",
+    "vite-plugin-pwa": "^2"
+  }
+}

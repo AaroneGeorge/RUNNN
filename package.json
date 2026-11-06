@@ -1,0 +1,13 @@
+{
+  "name": "runnn",
+  "private": true,
+  "packageManager": "pnpm@10",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @runnn/server --filter @runnn/web dev",
+    "build": "pnpm --filter @runnn/web build",
+    "start": "pnpm --filter @runnn/server start",
+    "test": "pnpm --filter @runnn/server test",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
