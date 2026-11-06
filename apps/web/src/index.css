@@ -1,0 +1,374 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+@theme {
+  /* One family in two widths: Archivo for UI, stretched to 125% / 900 for display. */
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Codes, vests and clocks: same family, tabular digits (see .font-mono below), no fake-technical mono. */
+  --font-mono: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Field map: cream terrain with contour lines, white cards, black ink, one yellow. */
+  --color-night: #eeebe3; /* page */
+  --color-deep: #f7f5f0; /* inset */
+  --color-panel: #ffffff; /* card */
+  --color-raise: #e2ded4; /* grey card / pressed */
+  --color-line: #d5d0c4;
+  --color-ink: #141414;
+  --color-dim: #6b665c;
+  --color-brand: #141414; /* primary actions are black pills */
+  --color-brand-ink: #ffffff;
+  --color-brand-press: #2b2b2b;
+  --color-switch-on: #141414;
+  --color-sun: #ffc21a; /* the one accent */
+  --color-sun-soft: #ffe7a3;
+  --color-blood: #e8452c; /* alarms only: being scanned, SOS, out of bounds */
+  --color-gold: #8a5f00; /* warning text */
+  /* Teams: zombies are yellow, survivors are white; both always carry a black outline. */
+  --color-zomb: #ffc21a;
+  --color-zomb-soft: #ffe7a3;
+  --color-surv: #ffffff;
+  --color-surv-soft: #ffffff;
+
+  /* Motion tokens (Emil Kowalski's curves): enter/exit, on-screen movement, sheets. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* The terrain pattern behind pages (and yellow cards, via bg-topo). */
+:root { --topo: url("/topo.svg"); }
+
+@layer base {
+  /* Dark mode: night ground, warm charcoal cards, cream ink; the one yellow stays. Set on <html> by lib/theme.ts. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-night: #141311;
+    --color-deep: #1b1a17;
+    --color-panel: #23211d;
+    --color-raise: #2e2c27;
+    --color-line: #45413a;
+    --color-ink: #f2efe7;
+    --color-dim: #a7a194;
+    --color-brand: #f2efe7; /* primary actions become cream pills */
+    --color-brand-ink: #141414;
+    --color-brand-press: #d9d5cb;
+    --color-switch-on: #ffc21a;
+    --color-sun-soft: #3b3115; /* soft yellow becomes a dark amber tint */
+    --color-zomb-soft: #3b3115;
+    --color-blood: #ef5a41;
+    --color-gold: #f0b429;
+    --topo: url("/topo-dark.svg");
+  }
+  /*
+   * Yellow cards, survivor-white surfaces and stickers (avatars, QR cards, tour scenes) keep the light palette in
+   * dark mode, so what's drawn on them stays black ink on light. One class of specificity: enough to beat base styles
+   * such as `a { color: inherit }`, while any utility on the element still wins (utilities are a later layer).
+   */
+  :where(:root[data-theme="dark"]) :is(.bg-sun, .bg-zomb, .bg-surv, .bg-white, .light-surface) {
+    --color-night: #eeebe3;
+    --color-deep: #f7f5f0;
+    --color-panel: #ffffff;
+    --color-raise: #e2ded4;
+    --color-line: #d5d0c4;
+    --color-ink: #141414;
+    --color-dim: #6b665c;
+    --color-brand: #141414;
+    --color-brand-ink: #ffffff;
+    --color-brand-press: #2b2b2b;
+    --color-switch-on: #141414;
+    --color-sun-soft: #ffe7a3;
+    --color-zomb-soft: #ffe7a3;
+    --color-blood: #e8452c;
+    --color-gold: #8a5f00;
+    --topo: url("/topo.svg");
+    color: var(--color-ink);
+  }
+  /* Paper is white: printing (the vest kit) always uses the light palette. */
+  @media print {
+    :root[data-theme="dark"] {
+      color-scheme: light;
+      --color-night: #eeebe3;
+      --color-panel: #ffffff;
+      --color-raise: #e2ded4;
+      --color-line: #d5d0c4;
+      --color-ink: #141414;
+      --color-dim: #6b665c;
+      --color-brand: #141414;
+      --color-brand-ink: #ffffff;
+    }
+  }
+
+  html, body, #root { height: 100%; }
+  html {
+    color-scheme: light;
+    /* No grey flash on tap, no font inflation in landscape, no pull-to-refresh inside the app. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+  }
+  body {
+    /* Contour lines: the game is played on real ground, so the page is a terrain map. */
+    background: var(--color-night) var(--topo) 0 0 / 560px 560px;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Controls fire instantly (no double-tap-zoom wait) and long-press doesn't select their label. */
+  button, a, [role="button"], label, summary {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  /* 16px minimum: anything smaller makes iOS zoom into the field. */
+  input, select, textarea { font: inherit; font-size: max(16px, 1em); }
+  :focus-visible { outline: 3px solid var(--color-sun); outline-offset: 2px; }
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3.5 font-bold text-base active:scale-[.97] disabled:active:scale-100;
+  transition: transform 140ms var(--ease-out), background-color 140ms ease, opacity 140ms ease;
+}
+
+/* Any tappable surface: same quick press-down as buttons. */
+@utility press {
+  transition: transform 140ms var(--ease-out), background-color 140ms ease;
+  &:active { transform: scale(.98); }
+}
+
+@utility bg-topo {
+  background-image: var(--topo);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* Wide, heavy display type: titles, the wordmark, big numbers. */
+@utility font-display {
+  font-stretch: 125%;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 0.95;
+}
+
+@layer components {
+  .btn-brand { @apply btn bg-brand text-brand-ink active:bg-brand-press; }
+  /* Yellow with an ink outline: the accent action (resume, start on dark-free surfaces). */
+  .btn-go { @apply btn bg-sun text-ink border-2 border-ink active:brightness-95; }
+  .btn-blood { @apply btn bg-blood text-white active:brightness-95; }
+  .btn-ghost { @apply btn bg-panel text-ink border-2 border-ink active:bg-raise; }
+  /* Disabled reads as "not yet", not as a faded brand colour. */
+  .btn-brand:disabled, .btn-go:disabled, .btn-blood:disabled { @apply bg-raise text-dim border-transparent; }
+  .btn-ghost:disabled { @apply opacity-45; }
+  .btn-sm { @apply px-3.5 py-2 text-sm; }
+  .card { @apply rounded-[28px] bg-panel; }
+  .field {
+    @apply w-full rounded-2xl bg-panel border-2 border-ink/15 px-4 py-3.5 text-ink placeholder:text-dim/60 outline-none focus:border-ink;
+  }
+  .label { @apply block text-sm font-bold text-dim mb-2; }
+  .chip { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold; }
+  .page { @apply mx-auto w-full max-w-xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[calc(var(--nav-h)+2rem)]; }
+  /* Numbers that change (clocks, counts, codes) keep their width. */
+  .font-mono { font-variant-numeric: tabular-nums; font-stretch: 110%; }
+}
+
+/* Map markers */
+.pm {
+  display: grid; place-items: center;
+  width: 34px; height: 34px; border-radius: 999px;
+  border: 2.5px solid #141414;
+  background: var(--c, #fff);
+  font-size: 17px; line-height: 1;
+  box-shadow: 0 3px 0 rgba(20,20,20,.18);
+  transition: opacity .3s;
+}
+.pm.self { width: 42px; height: 42px; font-size: 21px; box-shadow: 0 0 0 5px var(--color-sun), 0 0 0 7.5px #141414; }
+.pm.faded { opacity: .45; filter: grayscale(.6); }
+.pm-label {
+  position: absolute; top: 100%; left: 50%; transform: translate(-50%, 3px);
+  white-space: nowrap; font-size: 11px; font-weight: 700; color: #fff;
+  background: #141414; padding: 1px 6px; border-radius: 6px;
+}
+.om { font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.6)); }
+.maplibregl-ctrl-attrib { font-size: 10px; }
+
+@keyframes ping-ring { from { transform: scale(.6); opacity: .9 } to { transform: scale(2.2); opacity: 0 } }
+.radar-ring { animation: ping-ring 1.6s ease-out infinite; }
+@keyframes danger-flash { 0%,100% { opacity: .0 } 50% { opacity: .35 } }
+.danger-flash { animation: danger-flash .8s ease-in-out infinite; }
+/* Radar: a ping ring leaves the centre each time the view can update (live data, not decoration),
+   dots glide between GPS fixes instead of jumping, and the crosshair snaps onto a new nearest target. */
+@keyframes radar-ping { from { transform: scale(.08); opacity: .55 } to { transform: scale(1); opacity: 0 } }
+.radar-ping { transform-origin: 0 0; animation: radar-ping 2.4s var(--ease-out) infinite; }
+.radar-blip { transition: transform 900ms var(--ease-out); }
+@keyframes lock-on { from { transform: scale(1.6) rotate(45deg); opacity: 0 } to { transform: none; opacity: 1 } }
+.radar-lock { transform-origin: 0 0; animation: lock-on 280ms var(--ease-out) both; }
+/* Wordmark: the crosshair O swings in and locks once, the first time the wordmark appears. */
+@keyframes lock-on-o { from { transform: rotate(-90deg) scale(1.3); opacity: 0 } to { transform: none; opacity: 1 } }
+.wordmark-o svg { animation: lock-on-o 520ms var(--ease-out) 120ms both; }
+@media (prefers-reduced-motion: reduce) { .wordmark-o svg { animation: none; } }
+/* First-launch tour scenes: each loops one rule, and only while its card is on screen. */
+.scene:not([data-active]) * { animation-play-state: paused !important; }
+@keyframes scene-pulse { 0%, 100% { transform: scale(1) rotate(-4deg) } 50% { transform: scale(1.08) rotate(3deg) } }
+.scene-pulse { transform-origin: center; animation: scene-pulse 1.4s var(--ease-in-out) infinite; }
+@keyframes scene-lunge { 0%, 100% { transform: translateX(0) } 45% { transform: translateX(10px) } }
+.scene-lunge { animation: scene-lunge 2.2s var(--ease-in-out) infinite; }
+/* Radar (4 s): the zombie dot closes in, the crosshair locks on, the survivor gets scared, the dot drifts off. */
+@keyframes scene-approach { 0%, 100% { transform: translate(66px, -60px) } 50%, 78% { transform: translate(36px, -30px) } }
+.scene-approach { animation: scene-approach 4s var(--ease-in-out) infinite; }
+@keyframes scene-lock { 0%, 44% { transform: scale(1.6) rotate(45deg); opacity: 0 } 52%, 80% { transform: none; opacity: 1 } 88%, 100% { opacity: 0 } }
+.scene-lock { transform-origin: 0 0; animation: scene-lock 4s var(--ease-out) infinite; }
+@keyframes scene-calm { 0%, 46%, 84%, 100% { opacity: 1 } 50%, 80% { opacity: 0 } }
+@keyframes scene-alarm { 0%, 46%, 84%, 100% { opacity: 0 } 50%, 80% { opacity: 1 } }
+.scene-calm { animation: scene-calm 4s linear infinite; }
+.scene-alarm { opacity: 0; animation: scene-alarm 4s linear infinite; }
+/* Scan (4.5 s): the ring fills while the crosshair holds, then the survivor turns and a +1 pops. */
+@keyframes scene-fill { 0% { stroke-dashoffset: var(--c) } 66%, 100% { stroke-dashoffset: 0 } }
+.scene-fill { animation: scene-fill 4.5s linear infinite; }
+@keyframes scene-before { 0%, 66% { opacity: 1 } 70%, 96% { opacity: 0 } 100% { opacity: 1 } }
+@keyframes scene-after { 0%, 66% { opacity: 0; transform: scale(.9) } 72% { opacity: 1; transform: scale(1.06) } 78%, 96% { opacity: 1; transform: none } 100% { opacity: 0 } }
+.scene-before { animation: scene-before 4.5s linear infinite; }
+.scene-after { opacity: 0; transform-origin: 50% 100%; animation: scene-after 4.5s var(--ease-out) infinite; }
+@keyframes scene-plus { 0%, 68% { opacity: 0; transform: translateY(8px) scale(.9) } 74%, 92% { opacity: 1; transform: none } 100% { opacity: 0 } }
+.scene-plus { opacity: 0; animation: scene-plus 4.5s var(--ease-out) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .scene-pulse, .scene-lunge, .scene-approach, .scene-lock, .scene-calm, .scene-alarm, .scene-fill, .scene-before, .scene-after, .scene-plus { animation: none; }
+  .scene-approach { transform: translate(36px, -30px); }
+  .scene-lock, .scene-alarm, .scene-plus, .scene-after { opacity: 1; }
+  .scene-calm, .scene-before { opacity: 0; }
+  .scene-fill { stroke-dashoffset: 0 !important; }
+}
+/* Sign-in steps slide in from the side they come from; a wrong code shakes the boxes. */
+@keyframes step-in { from { transform: translateX(28px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes step-back { from { transform: translateX(-28px); opacity: 0 } to { transform: none; opacity: 1 } }
+.step-in { animation: step-in 240ms var(--ease-out) both; }
+.step-back { animation: step-back 240ms var(--ease-out) both; }
+@keyframes shake { 0%, 100% { transform: none } 20% { transform: translateX(-8px) } 40% { transform: translateX(7px) } 60% { transform: translateX(-5px) } 80% { transform: translateX(3px) } }
+.shake { animation: shake 320ms var(--ease-out); }
+/* Splash: the characters rise in after the wordmark locks on. */
+@keyframes rise-in { from { transform: translateY(24px); opacity: 0 } to { transform: none; opacity: 1 } }
+.rise-in { animation: rise-in 360ms var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  .step-in, .step-back, .rise-in { animation: step-fade 200ms ease both; }
+  .shake { animation: none; }
+}
+@keyframes step-fade { from { opacity: 0 } }
+/* "+1" on a count that just went up. */
+@keyframes bump-in { from { transform: translateY(6px) scale(.9); opacity: 0 } to { transform: none; opacity: 1 } }
+.bump-in { animation: bump-in 220ms var(--ease-out) both; }
+/* Characters: alive only where they're the subject (hero, picker, countdown, result).
+   A slow breath, an occasional blink, zombie arms that sway; a hop when picked. */
+@keyframes bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-3%) } }
+.mascot-bob { animation: bob 3.2s var(--ease-in-out) infinite; }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1) } 95% { transform: scaleY(.1) } }
+.mascot-live .m-eyes { transform-box: fill-box; transform-origin: center; animation: blink 4.6s ease infinite; }
+@keyframes sway-l { 0%, 100% { transform: rotate(0) } 50% { transform: rotate(-7deg) } }
+@keyframes sway-r { 0%, 100% { transform: rotate(0) } 50% { transform: rotate(7deg) } }
+.mascot-live .m-arm-l { transform-box: fill-box; transform-origin: 100% 100%; animation: sway-l 1.6s var(--ease-in-out) infinite; }
+.mascot-live .m-arm-r { transform-box: fill-box; transform-origin: 0% 100%; animation: sway-r 1.6s var(--ease-in-out) infinite; }
+@keyframes hop { 0% { transform: translateY(0) scale(1) } 35% { transform: translateY(-12%) scale(1.04, .96) } 70% { transform: translateY(0) scale(.97, 1.03) } 100% { transform: none } }
+.mascot-hop { animation: hop .5s var(--ease-out); }
+@keyframes rise { from { transform: translateY(12px); opacity: 0 } to { transform: none; opacity: 1 } }
+.rise { animation: rise .24s var(--ease-out) both; }
+
+/* Page content fades in on navigation: short, since it happens often. Opacity only and no fill,
+   so fixed-position children (bars, sheets) are never re-parented to a transformed ancestor. */
+@keyframes page-in { from { opacity: 0 } }
+.page { animation: page-in .18s ease; }
+
+/* Bottom sheet */
+.sheet-backdrop { transition: opacity 260ms ease; }
+.sheet-panel {
+  transition: transform 420ms var(--ease-drawer);
+  overscroll-behavior: contain;
+  will-change: transform;
+}
+.sheet-backdrop[data-state="closed"] { opacity: 0; }
+.sheet-panel[data-state="closed"] { transform: translateY(100%); }
+.sheet-panel[data-state="closing"] { transition-duration: 220ms; }
+.sheet-panel[data-dragging="true"] { transition: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep fades that explain what happened; drop movement. */
+  .page, .rise { animation: none; }
+  .sheet-panel { transition: none; }
+  .radar-ring { animation-duration: 3s; }
+  .radar-ping { animation: none; opacity: 0; }
+  .radar-blip { transition: none; }
+  .radar-lock, .bump-in { animation-duration: 1ms; }
+  .mascot-bob, .mascot-hop, .mascot-live .m-eyes, .mascot-live .m-arm-l, .mascot-live .m-arm-r { animation: none; }
+}
+
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+  .print-page { break-after: page; }
+}
+.maplibregl-ctrl-bottom-right { bottom: auto !important; top: 50%; }
+
+/* Sonner toasts in the app's palette (unlayered so it beats Sonner's own defaults). */
+/* `html` raises specificity over the styles Sonner injects at runtime. */
+html [data-sonner-toaster][data-sonner-theme="light"] {
+  --normal-bg: #ffffff;
+  --normal-border: #141414;
+  --normal-text: #141414;
+  --success-bg: #ffe7a3;
+  --success-border: #141414;
+  --success-text: #141414;
+  --error-bg: #ffe1da;
+  --error-border: #141414;
+  --error-text: #7a1d0e;
+  --warning-bg: #ffffff;
+  --warning-border: #141414;
+  --warning-text: #141414;
+  --border-radius: 20px;
+  font-family: var(--font-sans);
+}
+html [data-sonner-toast] { border-width: 2px !important; }
+[data-sonner-toast] [data-title] { font-size: 15px; font-weight: 600; line-height: 1.35; }
+
+/* Tab bar height, so pinned action bars sit above it. App sets data-nav on <html>. */
+:root { --nav-h: 0px; --ab-safe: env(safe-area-inset-bottom, 0px); }
+:root[data-nav="on"] { --nav-h: calc(65px + env(safe-area-inset-bottom, 0px)); --ab-safe: 0px; }
+.action-bar {
+  bottom: var(--nav-h);
+  padding-bottom: calc(.75rem + var(--ab-safe));
+  background: linear-gradient(to bottom, transparent, var(--color-night) 1.5rem);
+}
+
+/* Slider: filled track up to the thumb, 28px thumb for fingers. */
+.range {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 28px; background: transparent; cursor: pointer;
+  touch-action: pan-y;
+}
+.range::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 999px;
+  background: linear-gradient(to right, var(--color-ink) var(--p, 50%), var(--color-line) var(--p, 50%));
+}
+.range::-moz-range-track { height: 6px; border-radius: 999px; background: var(--color-line); }
+.range::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--color-ink); }
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; margin-top: -11px; border-radius: 999px;
+  background: var(--color-sun); box-shadow: 0 0 0 2.5px var(--color-ink);
+  transition: transform 140ms var(--ease-out);
+}
+.range:active::-webkit-slider-thumb { transform: scale(1.1); }
+.range::-moz-range-thumb {
+  width: 28px; height: 28px; border: 0; border-radius: 999px;
+  background: var(--color-sun); box-shadow: 0 0 0 2.5px var(--color-ink);
+}
+
+/* Survivor being scanned: red edges that pulse like a heartbeat. */
+@keyframes infect-pulse { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
+.infect-vignette {
+  box-shadow: inset 0 0 0 6px rgba(232, 69, 44, .9), inset 0 0 120px 40px rgba(232, 69, 44, .5);
+  animation: infect-pulse .7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .infect-vignette { animation: none; } }
