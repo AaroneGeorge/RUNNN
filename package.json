@@ -1,13 +1,22 @@
 {
-  "name": "runnn",
+  "name": "kalikkam",
   "private": true,
-  "packageManager": "pnpm@10",
-  "engines": { "node": ">=22.13" },
+  "type": "module",
   "scripts": {
-    "dev": "pnpm --parallel --filter @runnn/server --filter @runnn/web dev",
-    "build": "pnpm --filter @runnn/web build",
-    "start": "pnpm --filter @runnn/server start",
-    "test": "pnpm --filter @runnn/server test",
-    "typecheck": "pnpm -r typecheck"
+    "dev": "pnpm --parallel --filter @kalikkam/server --filter @kalikkam/web dev",
+    "dev:server": "pnpm --filter @kalikkam/server dev",
+    "dev:web": "pnpm --filter @kalikkam/web dev",
+    "build": "pnpm --filter @kalikkam/web build",
+    "start": "pnpm --filter @kalikkam/server start",
+    "test": "pnpm --filter @kalikkam/server test",
+    "smoke": "pnpm --filter @kalikkam/server exec tsx test/smoke.ts",
+    "typecheck": "pnpm -r typecheck",
+    "e2e": "pnpm build && node e2e/scan.e2e.mjs"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
   }
 }

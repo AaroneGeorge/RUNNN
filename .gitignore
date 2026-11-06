@@ -1,6 +1,8 @@
-node_modules/
-dist/
-apps/server/data/
-recordings/
-*.log
+node_modules
+dist
+*.db
+*.db-*
 .env
+apps/server/data
+recordings/
+e2e/out/
