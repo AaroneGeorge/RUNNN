@@ -1,0 +1,8 @@
+node_modules
+dist
+*.db
+*.db-*
+.env
+apps/server/data
+recordings/
+e2e/out/
