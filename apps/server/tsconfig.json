@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "types": ["node"] },
-  "include": ["src", "scripts", "test"]
+  "compilerOptions": { "types": ["node"], "lib": ["ES2023"] },
+  "include": ["src", "scripts", "test", "vitest.config.ts"]
 }

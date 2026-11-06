@@ -253,6 +253,7 @@ export interface CreateRoomBody {
   config: Record<string, number>;
   organiserPlays?: boolean;
   sim?: boolean;
+  speed?: number;
   bots?: number;
   eventId?: string;
 }
