@@ -59,5 +59,6 @@ export default defineConfig({
       '/ws': { target: SERVER.replace(/^http/, 'ws'), ws: true },
     },
   },
+  worker: { format: 'es' },
   build: { chunkSizeWarningLimit: 2000 },
 });

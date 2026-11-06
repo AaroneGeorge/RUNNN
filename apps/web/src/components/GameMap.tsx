@@ -1,8 +1,12 @@
 import type { Feature, FeatureCollection } from 'geojson';
-import { Map as MlMap, Marker, type GeoJSONSource, type MapMouseEvent } from 'maplibre-gl';
+import { Map as MlMap, Marker, setWorkerUrl, type GeoJSONSource, type MapMouseEvent } from 'maplibre-gl';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { useEffect, useRef, useState } from 'react';
 import { boundaryBox, offset, type Boundary, type LatLng, type MapMarker } from '@runnn/shared';
 import { cx } from './ui.tsx';
+
+// MapLibre 6 loads its tile worker from a URL; let Vite bundle it.
+setWorkerUrl(workerUrl);
 
 const STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
