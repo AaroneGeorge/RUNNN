@@ -1,0 +1,50 @@
+Join the hunt — Kalikkam Zombies (Field Map Doodle style)
+1080×1920, 30 fps, 31.1 s. Music and sound effects only; no voice, no subtitles.
+
+Imagery
+- Everything on screen is SVG drawn by code in kit.js, cast.js, screens.js and film.js. No photos, no
+  generated images, no stock, no sprites.
+- The zombie and survivor characters, the "Z⊕MBIES" wordmark, the phone screens (splash, tour, sign-in,
+  Home) and the cream contour-line ground are the Kalikkam app's own designs (apps/web: Mascot.tsx,
+  Welcome.tsx, Scenes.tsx, public/topo.svg), redrawn here in vector. topo.svg is the app's code-generated
+  contour pattern, copied unchanged.
+- The QR on the "Scan to infect" card is a real QR code for the text "Kalikkam vest", generated once with
+  the qrcode package (npm, MIT licence) and baked into qr.js as path data.
+- The phone is a generic rounded-rectangle bezel drawn in code; it imitates no real handset or brand.
+
+Fonts
+- Archivo (variable, wdth axis), Copyright 2020 The Archivo Project Authors
+  (https://github.com/Omnibus-Type/Archivo). SIL Open Font License 1.1, full text in fonts/OFL-Archivo.txt.
+  fonts/archivo-latin-wdth.woff2 is the Latin subset of the Google Fonts release, the same font the app uses.
+
+Music and sound
+- Original score and every sound effect synthesized in numpy/scipy by score.py: kick, clap, hats, snare,
+  bass, marimba, bell, pad, crash, and foley (sonar ping, two-tone lock, tap, card slide, typing tick, pop,
+  boing, riser, wind). Placed from the picture's own events (out/events.json). No samples, no third-party
+  music.
+- score.py imports helpers (filters, noise, heartbeat, whoosh, thump, ding) from the Lemo-Opuscar library,
+  core/audio/sfx.py, under the MIT licence below.
+- Techniques (not code) from the library's Game Show Flat style: tempo grid, event-driven score, back-ease
+  pops; and from Living Screencast: push-in to the tap, pull back.
+
+Software
+- Lemo-Opuscar render tools (core/render: events.mjs, video.mjs, readcheck.mjs, mux.sh), MIT licence below.
+- Playwright-core 1.63 (Apache-2.0) driving Chrome Headless Shell; FFmpeg 8.0.1 (libx264, AAC);
+  Python 3 with numpy 2.5, scipy 1.18 and soundfile 0.14.
+
+Lemo-Opuscar licence (for the library code this film runs and imports)
+  MIT License
+  Copyright (c) 2026 LemoLab
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+  associated documentation files (the "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+  following conditions: The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+  LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO
+  EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+  THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+The film is the Kalikkam team's own; it carries no library credit or watermark.

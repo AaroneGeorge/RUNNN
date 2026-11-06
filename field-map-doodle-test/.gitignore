@@ -1,0 +1,6 @@
+# Renders, frames and review sheets: rebuilt by build.sh
+out/
+stills/
+review/
+# The style lives in ~/lemo-my-styles/field-map-doodle/
+style/

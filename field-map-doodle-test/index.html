@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kalikkam · Join the hunt</title>
+<style>
+  @font-face {
+    font-family: 'Archivo Variable';
+    src: url(fonts/archivo-latin-wdth.woff2) format('woff2-variations');
+    font-weight: 100 900;
+    font-stretch: 62% 125%;
+  }
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #eeebe3; }
+  svg { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs><clipPath id="frame"><rect width="1080" height="1920"/></clipPath></defs>
+  <g clip-path="url(#frame)">
+    <g id="cam"><g id="world"></g></g>
+    <g id="hud"></g>
+    <rect id="flash" width="1080" height="1920" fill="#ffffff" opacity="0"/>
+  </g>
+</svg>
+<script type="module" src="film.js"></script>
+</body>
+</html>
