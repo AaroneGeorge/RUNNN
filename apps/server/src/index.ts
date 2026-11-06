@@ -24,6 +24,7 @@ import { GameError, roomCode } from './games/util.ts';
 import { sendSignInCode } from './mail.ts';
 import { Room, type Player } from './room.ts';
 import { Store, StoreError } from './store.ts';
+import { WorldError, WorldId, worldConfigFromEnv } from './worldid.ts';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const PORT = Number(process.env.PORT ?? 2567);
@@ -34,6 +35,9 @@ const MAX_BODY = 256 * 1024;
 const MAX_ROOMS = 100;
 
 export const store = new Store(DB_PATH);
+const worldCfg = worldConfigFromEnv();
+export const world = worldCfg ? new WorldId(worldCfg) : null;
+if (world) console.log(`World ID Selfie Check sign-in on (${world.cfg.environment}, action "${world.cfg.action}")`);
 export const rooms = new Map<string, Room>();
 
 if (process.env.ORGANISER_USERNAME && process.env.ORGANISER_PASSWORD) {
@@ -73,6 +77,7 @@ const codeAsks = new Budget(20, 3600_000);
 const loginIp = new Budget(10, 15 * 60_000);
 const loginUser = new Budget(10, 15 * 60_000);
 const creates = new Budget(30, 3600_000);
+const worldAsks = new Budget(30, 3600_000);
 
 // ───────────────────────────── http helpers ─────────────────────────────
 
@@ -294,6 +299,21 @@ async function api(req: IncomingMessage, res: ServerResponse, url: URL) {
     return json(res, 200, r);
   }
 
+  // World ID Selfie Check sign-in
+  if (seg[0] === 'auth' && seg[1] === 'world') {
+    if (seg[2] === 'config' && m === 'GET') return json(res, 200, world ? world.publicConfig() : { enabled: false });
+    if (!world) throw new HttpError(404, 'World ID sign-in is not set up on this server.');
+    if (seg[2] === 'context' && m === 'POST') {
+      if (!worldAsks.take(ip(req))) throw new HttpError(429, 'Too many sign-in attempts from here. Try later.');
+      return json(res, 200, { rp_context: world.createContext() });
+    }
+    if (seg[2] === 'verify' && m === 'POST') {
+      const { nullifier } = await world.verifyResult(body.result);
+      const r = store.loginWithWorld(nullifier, body.name, bearer(req, 'x-profile-token'));
+      return json(res, 200, { token: r.token, profile: r.profile, linked: r.linked, created: r.created });
+    }
+  }
+
   // leaderboard
   if (path === '/api/leaderboard' && m === 'GET') {
     const b = url.searchParams.get('board');
@@ -394,6 +414,7 @@ export const server = createServer(async (req, res) => {
     if (e instanceof HttpError) return json(res, e.status, { error: e.message });
     if (e instanceof StoreError) return json(res, e.status, { error: e.message });
     if (e instanceof GameError) return json(res, 400, { error: e.message });
+    if (e instanceof WorldError) return json(res, e.status, { error: e.message });
     console.error(e);
     if (!res.headersSent) json(res, 500, { error: 'Something went wrong on our side.' });
   }
@@ -517,7 +538,7 @@ const reapLoop = setInterval(() => {
       rooms.delete(code);
     }
   }
-  for (const b of [codeAsks, loginIp, loginUser, creates]) b.sweep();
+  for (const b of [codeAsks, loginIp, loginUser, creates, worldAsks]) b.sweep();
 }, 60_000);
 
 export function stop() {

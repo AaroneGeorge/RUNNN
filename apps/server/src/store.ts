@@ -135,6 +135,12 @@ export class Store {
     if (!cols.some((c) => c.name === 'email')) this.db.exec('ALTER TABLE profiles ADD COLUMN email TEXT');
     this.db.exec('CREATE UNIQUE INDEX IF NOT EXISTS profiles_email ON profiles(email) WHERE email IS NOT NULL');
     this.db.exec('CREATE INDEX IF NOT EXISTS results_ended ON results(ended_at)');
+    if (!cols.some((c) => c.name === 'world_nullifier')) {
+      this.db.exec('ALTER TABLE profiles ADD COLUMN world_nullifier TEXT');
+      this.db.exec('ALTER TABLE profiles ADD COLUMN world_verified_at INTEGER');
+    }
+    // One human (per app + action) can own exactly one profile.
+    this.db.exec('CREATE UNIQUE INDEX IF NOT EXISTS profiles_world ON profiles(world_nullifier) WHERE world_nullifier IS NOT NULL');
   }
 
   close() {
@@ -193,6 +199,7 @@ export class Store {
       wins: r.wins,
       best: { runner: best.r ?? null, hunter: best.h ?? null },
       badges,
+      humanVerified: r.world_nullifier != null,
     };
   }
 
@@ -291,6 +298,32 @@ export class Store {
     const { profile, token } = this.createProfile(email.split('@')[0], now);
     this.db.prepare('UPDATE profiles SET email = ? WHERE id = ?').run(email, profile.id);
     return { token, profile, linked: false };
+  }
+
+  // ───────────────────────────── World ID ─────────────────────────────
+
+  /**
+   * Sign in with a verified World ID nullifier. Same rules as email: the human's own profile
+   * if they have one; else mark the signed-in guest as verified (their XP survives); else a new profile.
+   */
+  loginWithWorld(nullifier: string, rawName?: unknown, guestToken?: unknown, now = Date.now()) {
+    if (!/^\d{1,78}$/.test(nullifier)) throw new StoreError('Bad World ID nullifier.');
+    const owner = this.db.prepare('SELECT id, token FROM profiles WHERE world_nullifier = ?').get(nullifier) as Row | undefined;
+    if (owner) return { token: owner.token as string, profile: this.profile(owner.id)!, linked: false, created: false };
+
+    const guestId = this.profileIdByToken(guestToken);
+    if (guestId) {
+      const g = this.db.prepare('SELECT world_nullifier FROM profiles WHERE id = ?').get(guestId) as Row;
+      if (g.world_nullifier && g.world_nullifier !== nullifier)
+        throw new StoreError('This profile is already verified by a different World ID.', 409);
+      this.db.prepare('UPDATE profiles SET world_nullifier = ?, world_verified_at = ? WHERE id = ?').run(nullifier, now, guestId);
+      const t = this.db.prepare('SELECT token FROM profiles WHERE id = ?').get(guestId) as Row;
+      return { token: t.token as string, profile: this.profile(guestId)!, linked: true, created: false };
+    }
+
+    const { profile, token } = this.createProfile(cleanName(rawName) || 'Runner', now);
+    this.db.prepare('UPDATE profiles SET world_nullifier = ?, world_verified_at = ? WHERE id = ?').run(nullifier, now, profile.id);
+    return { token, profile: this.profile(profile.id)!, linked: false, created: true };
   }
 
   // ───────────────────────────── organisers ─────────────────────────────

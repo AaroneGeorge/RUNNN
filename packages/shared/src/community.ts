@@ -18,6 +18,8 @@ export interface Profile {
   wins: number;
   best: TeamPoints;
   badges: Badge[];
+  /** Verified as a unique human with World ID Selfie Check. */
+  humanVerified: boolean;
 }
 
 export interface HistoryItem {
@@ -137,4 +139,12 @@ export function badgesFor(i: BadgeInput): string[] {
   if (i.wasConverted && i.conversions >= 1) out.push('turncoat');
   if (i.organised) out.push('organiser');
   return out;
+}
+
+/** Public World ID config the client needs to open a Selfie Check request. */
+export interface WorldIdConfig {
+  enabled: boolean;
+  app_id?: `app_${string}`;
+  action?: string;
+  environment?: 'production' | 'staging' | 'sandbox';
 }

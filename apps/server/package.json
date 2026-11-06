@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@runnn/shared": "workspace:*",
+    "@worldcoin/idkit-core": "^4.6.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
